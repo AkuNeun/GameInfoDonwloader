@@ -28,7 +28,7 @@ class GameSpider:
         self.result_button = tkinter.Button(self.frame,command=self.get_full_info,text='查询')
         self.url_input.focus()
         self.display_info.insert(tkinter.END, "已经启动游戏爬虫，咔嚓咔嚓~~")
-        self.display_info.insert(tkinter.END, "目前支持taptap、Steam两大平台！")
+        self.display_info.insert(tkinter.END, "目前支持taptap、Steam、PS4三大平台！")
         self.display_info.insert(tkinter.END, "输入游戏链接，即可把游戏信息保存本地（文字+图片）")
         #print("已经启动游戏爬虫，咔嚓咔嚓~~")
 
@@ -55,7 +55,7 @@ class GameSpider:
         data['game_developer'] =[developer.text.replace("\n","") for developer in soup.select("div.header-text-author")] #游戏开发者
         data['game_description'] = soup.select("#description")[0].text #游戏简介
         data['game_images'] = [img.get('src').split('?')[0] for img in soup.select('div.body-images-normal img')] #游戏图片
-        print(data)
+        #print(data)
         return data
 # 解析steam游戏数据
     def get_steam_info(self,soup):
@@ -67,7 +67,20 @@ class GameSpider:
         data['game_developer'] =[developer.text.replace("\n","") for developer in soup.select(".user_reviews div.dev_row")] #游戏开发者
         data['game_description'] = soup.select(".game_area_description")[0].text #游戏简介
         data['game_images'] = [img.get('src').replace('116x65','1920x1080') for img in soup.select('.highlight_strip_screenshot img')] #游戏图片
-        print(data)
+       # print(data)
+        return data
+#解析play station游戏数据
+    def get_ps_info(self,soup):
+        data={}
+        data['game_channel'] = soup.select(".playable-on__button-set a")[0].text  # 游戏渠道
+        data['game_title'] = soup.select("h2.pdp__title")[0].text.strip()  # 游戏名称
+        data['game_other_title'] = ""  # 游戏别名
+        data['game_icon'] = soup.select("div.pdp__thumbnail-img img.product-image__img.product-image__img--product.product-image__img-main")[0].get('src')  # 游戏icon地址
+        data['game_developer'] = [soup.select("h5.provider-info__text")[0].text]  # 游戏开发者
+        data['game_description'] = soup.select(".pdp__description p")[0].text  # 游戏简介
+        data['game_images'] = [img.get('src') for img in
+                               soup.select('img.thumbnail-item__content')]  # 游戏图片
+        #print(data)
         return data
 # 创建游戏文件夹
     def mkdir(self,path):
@@ -146,6 +159,7 @@ class GameSpider:
             fw.write("\n")
             self.display_info.insert(tkinter.END, "文字信息保存成功！")
 
+
 ## 下载游戏全部信息
     def get_full_info(self):
         url = self.url_input.get()
@@ -156,10 +170,12 @@ class GameSpider:
             game_data = self.get_taptap_info(game_info)
         elif 'steam' in url:
             game_data = self.get_steam_info(game_info)
+        elif '.playstation' in url:
+            game_data = self.get_ps_info(game_info)
         self.download_info(game_data)
         self.download_pic(game_data)
         self.download_icon(game_data)
-        self.display_info.insert(tkinter.END, "下载完成了哦亲！")
+        self.display_info.insert(tkinter.END, "《{}》下载完成了哦亲！".format(game_data['game_title']))
 
 def main():
     GS = GameSpider()
